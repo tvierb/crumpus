@@ -6,12 +6,6 @@ class tPlayer
    function __construct($name)
    {
       $this->name = $name;
-      $this->setRoom(0);
-   }
-
-   function setRoom($id)
-   {
-      $this->roomId = $id;
    }
 }
 
@@ -25,6 +19,7 @@ class tRoom
       $this->southId = null;
       $this->eastId  = null;
       $this->westId  = null;
+      $this->items = [];
    }
 
    function getId()
@@ -32,7 +27,12 @@ class tRoom
       return $this->id;
    }
 
-   function connect($direction, $oth)
+   function addItem($name)
+   {
+      $this->items[] = $name;
+   }
+
+   function connect($direction, tRoom $oth)
    {
       switch ($direction)
       {
@@ -56,9 +56,24 @@ class tRoom
       }
    }
 
+   function getShortInfo()
+   {
+      return $this->getId() . ' (' . ($this->name !== null ? '"' . $this->name . '"': 'NULL') . ')';
+   }
+
+   function getWhereCanIGo()
+   {
+      $wcig = [];
+      if ($this->westId  !== null) $wcig[] = 'west';
+      if ($this->northId !== null) $wcig[] = 'north';
+      if ($this->eastId  !== null) $wcig[] = 'east';
+      if ($this->southId !== null) $wcig[] = 'south';
+      return implode(", ", $wcig);
+   }
+
    function dump()
    {
-       print "Room ID=" . $this->getId() . "(" . ($this->name === null ? "null" : $this->name) . ")" . "\n";
+       print "Room " . $this->getShortInfo() . "\n";
        print "  east : " . var_export($this->eastId, 1) . "\n";
        print "  west : " . var_export($this->westId, 1) . "\n";
        print "  north: " . var_export($this->northId, 1) . "\n";
@@ -77,17 +92,20 @@ class tGame
       $this->rooms = []; // id => object
       $this->player = new tPlayer('t3o');
       $this->initRooms();
+      $this->currentRoomId = 0;
    }
 
    function initRooms()
    {
       // test: four connected rooms:
       $root = $this->addRoom('root');
+      $root->addItem('a dark green chest');
       $tmp = $this->addRoom('A room', 'east', $root);
-      //$tmp = $this->addRoom('A room', 'north', $tmp);
-      //$tmp = $this->addRoom('A room', 'west', $tmp);
-      //$tmp = $this->addRoom();
-      //$tmp->connect('south', $root);
+      $tmp->addItem('a yellow key');
+      $tmp = $this->addRoom('A room', 'north', $tmp);
+      $tmp->addItem('a puppet');
+      $tmp = $this->addRoom('A room', 'west', $tmp);
+      $tmp->connect('south', $root);
    }
 
    function getNewId()
@@ -101,12 +119,11 @@ class tGame
    {
       $id = $this->getNewId();
       $r = new tRoom($id, $name);
-$r->dump();
       $this->rooms[ $r->getId() ] = $r;
 
       if (($inDirection !== null) && ($ofRoom !== null))
       {
-          $ofRoom->connect($inDirection, $ofRoom);
+          $ofRoom->connect($inDirection, $r);
       }
       return $r;
    }
@@ -120,7 +137,68 @@ $r->dump();
           $r->dump();
        }
    }
+
+   function getPlayer()
+   {
+      return $this->player;
+   }
+
+   function getPlayerRoom()
+   {
+      return $this->rooms[ $this->currentRoomId ];
+   }
 }
 
 $game = new tGame();
-$game->dump();
+
+print "Hello player!\n";
+$cmd = null;
+while ($cmd !== 'q')
+{
+   $pr = $game->getPlayerRoom();
+    print "You are in room " . $pr->getShortInfo() . ".\n";
+    if (count($pr->items))
+    {
+       print "Items in the current room: " . implode(", ", $pr->items) . "\n";
+    }
+    else
+    {
+       print "There are no items in this room.\n";
+    }
+    print "You can go to: " . $pr->getWhereCanIGo() . "\n";
+    print "\n";
+
+    $cmd = readline('Enter command> ');
+
+    switch ($cmd)
+    {
+       case "n" :
+          if ($pr->northId !== null)
+          {
+             $game->currentRoomId = $pr->northId;
+          }
+          break;
+       case "s" :
+          if ($pr->southId !== null)
+          {
+             $game->currentRoomId = $pr->southId;
+          }
+          break;
+       case "e" :
+          if ($pr->eastId !== null)
+          {
+             $game->currentRoomId = $pr->eastId;
+          }
+          break;
+       case "w" :
+          if ($pr->westId !== null)
+          {
+             $game->currentRoomId = $pr->westId;
+          }
+          break;
+       case "dump":
+          $game->dump();
+          break;
+    }
+}
+
