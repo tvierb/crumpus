@@ -6,6 +6,22 @@ class tPlayer
    function __construct($name)
    {
       $this->name = $name;
+      $this->roomId = 0;
+   }
+
+   function setRoom($room)
+   {
+      $this->setRoomId($room->getId());
+   }
+
+   function setRoomId($id)
+   {
+      $this->roomId = $id;
+   }
+
+   function getRoomId()
+   {
+      return $this->roomId;
    }
 }
 
@@ -92,7 +108,7 @@ class tGame
       $this->rooms = []; // id => object
       $this->player = new tPlayer('t3o');
       $this->initRooms();
-      $this->currentRoomId = 0;
+      $this->player->setRoomId( 0 );
    }
 
    function initRooms()
@@ -145,7 +161,7 @@ class tGame
 
    function getPlayerRoom()
    {
-      return $this->rooms[ $this->currentRoomId ];
+      return $this->rooms[ $this->player->getRoomId() ];
    }
 }
 
@@ -155,7 +171,8 @@ print "Hello player!\n";
 $cmd = null;
 while ($cmd !== 'q')
 {
-   $pr = $game->getPlayerRoom();
+    $pr = $game->getPlayerRoom();
+    print "\n";
     print "You are in room " . $pr->getShortInfo() . ".\n";
     if (count($pr->items))
     {
@@ -168,33 +185,36 @@ while ($cmd !== 'q')
     print "You can go to: " . $pr->getWhereCanIGo() . "\n";
     print "\n";
 
-    $cmd = readline('Enter command> ');
+    $cmd = readline('Enter command (h = help) > ');
 
     switch ($cmd)
     {
        case "n" :
           if ($pr->northId !== null)
           {
-             $game->currentRoomId = $pr->northId;
+             $game->player->setRoomId($pr->northId);
           }
           break;
        case "s" :
           if ($pr->southId !== null)
           {
-             $game->currentRoomId = $pr->southId;
+             $game->player->setRoomId( $pr->southId );
           }
           break;
        case "e" :
           if ($pr->eastId !== null)
           {
-             $game->currentRoomId = $pr->eastId;
+             $game->player->setRoomId( $pr->eastId );
           }
           break;
        case "w" :
           if ($pr->westId !== null)
           {
-             $game->currentRoomId = $pr->westId;
+             $game->player->setRoomId( $pr->westId );
           }
+          break;
+       case "h":
+          print "Go to (n)orth, (s)outh, (e)ast or (w)west or (q)uit\n";
           break;
        case "dump":
           $game->dump();
