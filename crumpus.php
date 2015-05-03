@@ -1,5 +1,7 @@
 #!/usr/bin/php
 <?php
+// TODO: Weitere Todos definieren
+// TODO: Nicht Himmelsrichtungen zeigen, sondern ob es nach rechts/links/vor/zurueck geht.
 
 class tPlayer
 {
@@ -31,11 +33,27 @@ class tRoom
    {
       $this->id = $id;
       $this->name = $name;
+      $this->description = null;
       $this->northId = null;
       $this->southId = null;
       $this->eastId  = null;
       $this->westId  = null;
       $this->items = [];
+   }
+
+   function setDescription($txt)
+   {
+      $this->description = $txt;
+   }
+
+   function getDescription()
+   {
+      return $this->description;
+   }
+
+   function hasDescription()
+   {
+      return $this->getDescription() !== null;
    }
 
    function getId()
@@ -80,16 +98,17 @@ class tRoom
    function getWhereCanIGo()
    {
       $wcig = [];
-      if ($this->westId  !== null) $wcig[] = 'west';
-      if ($this->northId !== null) $wcig[] = 'north';
-      if ($this->eastId  !== null) $wcig[] = 'east';
-      if ($this->southId !== null) $wcig[] = 'south';
+      if ($this->westId  !== null) $wcig[] = '(w)esten';
+      if ($this->northId !== null) $wcig[] = '(n)orden';
+      if ($this->eastId  !== null) $wcig[] = '(o)sten';
+      if ($this->southId !== null) $wcig[] = '(s)ueden';
       return implode(", ", $wcig);
    }
 
    function dump()
    {
        print "Room " . $this->getShortInfo() . "\n";
+       print "  description: " . ($this->hasDescription() ? $this->getDescription() : 'NONE') . "\n";
        print "  east : " . var_export($this->eastId, 1) . "\n";
        print "  west : " . var_export($this->westId, 1) . "\n";
        print "  north: " . var_export($this->northId, 1) . "\n";
@@ -115,11 +134,13 @@ class tGame
    {
       // test: four connected rooms:
       $root = $this->addRoom('root');
-      $root->addItem('a dark green chest');
+      $root->addItem('eine alte geschlossene Holzkiste.');
+      $root->setDescription("Du befindest dich in einem düsteren, feuchten Gewölbe.");
+
       $tmp = $this->addRoom('A room', 'east', $root);
-      $tmp->addItem('a yellow key');
+      $tmp->addItem('eine leere Glasflaschea');
       $tmp = $this->addRoom('A room', 'north', $tmp);
-      $tmp->addItem('a puppet');
+      $tmp->addItem('einen Kronkorken');
       $tmp = $this->addRoom('A room', 'west', $tmp);
       $tmp->connect('south', $root);
    }
@@ -167,25 +188,23 @@ class tGame
 
 $game = new tGame();
 
-print "Hello player!\n";
+print "Hallo Spieler!\n";
 $cmd = null;
 while ($cmd !== 'q')
 {
     $pr = $game->getPlayerRoom();
     print "\n";
-    print "You are in room " . $pr->getShortInfo() . ".\n";
+    print "Raum " . $pr->getId() . ".\n";
+    if ($pr->hasDescription()) print "\n" . $pr->getDescription() . "\n";
     if (count($pr->items))
     {
-       print "Items in the current room: " . implode(", ", $pr->items) . "\n";
+       print "Du siehst " . implode(", ", $pr->items) . ".\n";
     }
-    else
-    {
-       print "There are no items in this room.\n";
-    }
-    print "You can go to: " . $pr->getWhereCanIGo() . "\n";
+    
+    print "Von hier aus geht es weiter nach: " . $pr->getWhereCanIGo() . "\n";
     print "\n";
 
-    $cmd = readline('Enter command (h = help) > ');
+    $cmd = readline('Deine Eingabe (h = help) > ');
 
     switch ($cmd)
     {
@@ -214,7 +233,7 @@ while ($cmd !== 'q')
           }
           break;
        case "h":
-          print "Go to (n)orth, (s)outh, (e)ast or (w)west or (q)uit\n";
+          print "Gehe nach (n)orden, (s)ueden, (o)sten oder (w)esten, oder Beende mit (q)uit.\n";
           break;
        case "dump":
           $game->dump();
