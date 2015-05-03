@@ -2,6 +2,7 @@
 <?php
 // TODO: Weitere Todos definieren
 // TODO: Nicht Himmelsrichtungen zeigen, sondern ob es nach rechts/links/vor/zurueck geht.
+// TODO: Multiplayer: Je nach Spezies besondere Fähigkeiten (Spüren anderer Spieler in entfernten Räumen
 
 class tPlayer
 {
